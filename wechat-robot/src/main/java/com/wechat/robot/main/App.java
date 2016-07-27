@@ -8,12 +8,12 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.UIManager;
 
-import com.wechat.robot.util.CookieUtil;
-import com.wechat.robot.util.JSUtil;
-import com.wechat.robot.util.Matchers;
+import org.apache.commons.lang.StringEscapeUtils;
 
 import blade.kit.DateKit;
 import blade.kit.StringKit;
@@ -23,6 +23,13 @@ import blade.kit.json.JSONArray;
 import blade.kit.json.JSONObject;
 import blade.kit.logging.Logger;
 import blade.kit.logging.LoggerFactory;
+
+import com.racing.commons.xml.XMLNode;
+import com.racing.commons.xml.XmlEngine;
+import com.racing.redis.Redis;
+import com.wechat.robot.util.CookieUtil;
+import com.wechat.robot.util.JSUtil;
+import com.wechat.robot.util.Matchers;
 
 /**
  * Hello world!
@@ -491,7 +498,9 @@ public class App {
 			JSONObject msg = AddMsgList.getJSONObject(i);
 			int msgType = msg.getInt("MsgType", 0);
 			String name = getUserRemarkName(msg.getString("FromUserName"));
+			String msgId=msg.getString("MsgId");
 			String content = msg.getString("Content");
+			Redis.putObjectByKey(msgId, msg);
 			if(msgType == 51){
 				LOGGER.info("[*] 成功截获微信初始化消息");
 			} else if(msgType == 1){
@@ -513,12 +522,21 @@ public class App {
 					LOGGER.info("自动回复: " + ans);
 				}
 			} else if(msgType == 3){
-//				webwxsendmsg("二蛋还不支持图片呢", msg.getString("FromUserName"));
+				//图片
 			} else if(msgType == 34){
-//				webwxsendmsg("二蛋还不支持语音呢", msg.getString("FromUserName"));
+				//语音
 			} else if(msgType == 42){
-				LOGGER.info(name + " 给你发送了一张名片:");
-				LOGGER.info("=========================");
+				//名片
+			}else if(msgType==10002){
+				//撤回消息
+				content=StringEscapeUtils.unescapeXml(content);
+				String xmlHeader="<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+				try {
+					XMLNode node=XmlEngine.instance().getResultsByXML(xmlHeader.concat(content), false,null);
+					String oldMsgId=node.getChildNodeByKey("MsgId").getContent();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}
