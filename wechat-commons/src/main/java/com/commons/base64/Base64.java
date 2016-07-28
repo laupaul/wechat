@@ -1,4 +1,4 @@
-package com.racing.commons.base64;
+package com.commons.base64;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;

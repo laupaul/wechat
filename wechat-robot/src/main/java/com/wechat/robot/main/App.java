@@ -5,11 +5,12 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.swing.UIManager;
 
@@ -24,9 +25,9 @@ import blade.kit.json.JSONObject;
 import blade.kit.logging.Logger;
 import blade.kit.logging.LoggerFactory;
 
-import com.racing.commons.xml.XMLNode;
-import com.racing.commons.xml.XmlEngine;
-import com.racing.redis.Redis;
+import com.commons.dateutil.DateUtils;
+import com.commons.xml.XMLNode;
+import com.commons.xml.XmlEngine;
 import com.wechat.robot.util.CookieUtil;
 import com.wechat.robot.util.JSUtil;
 import com.wechat.robot.util.Matchers;
@@ -49,6 +50,8 @@ public class App {
 	private QRCodeFrame qrCodeFrame;
 	
 	private JSONObject SyncKey, User, BaseRequest;
+	
+	private Map<String, JSONObject> messages=null;
 	
 	// 微信联系人列表，可聊天的联系人列表
 	private JSONArray MemberList, ContactList;
@@ -483,6 +486,19 @@ public class App {
 		return jsonObject;
 	}
 	
+	public void setMessages(String msgId,JSONObject obj) {
+		if(this.messages==null)
+			messages=new HashMap<String, JSONObject>();
+		
+		this.messages.put(msgId, obj);
+	}
+
+	public JSONObject getMessages(String msgId) {
+		if(this.messages==null)
+			return null;
+		return this.messages.get(msgId);
+	}
+	
 	/**
 	 * 获取最新消息
 	 */
@@ -500,11 +516,11 @@ public class App {
 			String name = getUserRemarkName(msg.getString("FromUserName"));
 			String msgId=msg.getString("MsgId");
 			String content = msg.getString("Content");
-			Redis.putObjectByKey(msgId, msg);
+			setMessages(msgId, msg);
 			if(msgType == 51){
 				LOGGER.info("[*] 成功截获微信初始化消息");
 			} else if(msgType == 1){
-				if(msg.getString("FromUserName").indexOf("@@")!=-1 && !getNotFilterGroups().contains(name)){
+				if(msg.getString("FromUserName").indexOf("@@")!=-1){
 					String[] peopleContent = content.split(":<br/>");
 					LOGGER.info("|" + name + "| " + getUserRemarkName(peopleContent[0]) + ":\n" + peopleContent[1].replace("<br/>", "\n"));
 					continue;
@@ -518,8 +534,8 @@ public class App {
 				} else {
 					LOGGER.info(name + ": " + content);
 					String ans = xiaodoubi(content);
-					webwxsendmsg(ans, msg.getString("FromUserName"));
-					LOGGER.info("自动回复: " + ans);
+//					webwxsendmsg(ans, msg.getString("FromUserName"));
+//					LOGGER.info("自动回复: " + ans);
 				}
 			} else if(msgType == 3){
 				//图片
@@ -531,24 +547,29 @@ public class App {
 				//撤回消息
 				content=StringEscapeUtils.unescapeXml(content);
 				String xmlHeader="<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+				String regx="";
 				try {
+					if(content.indexOf("<sysmsg")!=0){
+						regx=content.substring(0,content.indexOf("<sysmsg"));
+						content=content.substring(content.indexOf("<sysmsg"));
+					}
 					XMLNode node=XmlEngine.instance().getResultsByXML(xmlHeader.concat(content), false,null);
-					String oldMsgId=node.getChildNodeByKey("MsgId").getContent();
+					String oldMsgId=node.getChildNodeByKey("revokemsg").getChildNodeByKey("msgid").getContent();
+					String replacemsg=node.getChildNodeByKey("revokemsg").getChildNodeByKey("replacemsg").getContent();
+					JSONObject msgObj=getMessages(oldMsgId);
+					if(msgObj!=null){
+						String nickname=replacemsg.replace("\"", "").replace(" 撤回了一条消息", "");
+						String oldContent=msgObj.getString("Content");
+						String sendContent=String.format("%s 撤回消息:%s", nickname,StringEscapeUtils.unescapeXml(oldContent.replace(regx, "")));
+						webwxsendmsg(sendContent, msg.getString("FromUserName"));
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 		}
 	}
-	
-	private Set<String> getNotFilterGroups(){
-		Set<String> groups=new HashSet<String>();
-		groups.add("四个小伙");
-		groups.add("小嘛小二逼呀");
-		groups.add("金蝶EAS");
-		return groups;
-	}
-	
+
 	private final String ITPK_API = "http://i.itpk.cn/api.php";
 	
 	// 这里的api_key和api_secret可以自己申请一个

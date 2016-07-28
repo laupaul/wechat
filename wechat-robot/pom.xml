@@ -23,6 +23,11 @@
 			<artifactId>blade-kit</artifactId>
 			<version>1.2.9-alpha</version>
 		</dependency>
+		<dependency>
+			<groupId>wechat</groupId>
+			<artifactId>wechat-commons</artifactId>
+			<version>1.0.1</version>
+		</dependency>
 	</dependencies>
 
 	<build>

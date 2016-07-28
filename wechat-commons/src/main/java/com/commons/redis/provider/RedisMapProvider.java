@@ -1,6 +1,4 @@
-package com.racing.redis.provider;
-
-import com.commons.redis.provider.RedisProvider;
+package com.commons.redis.provider;
 
 
 /**

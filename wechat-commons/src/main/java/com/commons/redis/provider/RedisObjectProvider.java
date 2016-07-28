@@ -1,4 +1,4 @@
-package com.racing.redis.provider;
+package com.commons.redis.provider;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -8,7 +8,6 @@ import redis.clients.jedis.Jedis;
 
 import com.commons.redis.annotation.RedisKey;
 import com.commons.redis.exception.RedisException;
-import com.commons.redis.provider.RedisProvider;
 import com.commons.redis.serializable.ObjectSerializable;
 
 /**

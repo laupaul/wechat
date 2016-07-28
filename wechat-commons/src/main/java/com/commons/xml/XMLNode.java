@@ -1,4 +1,4 @@
-package com.racing.commons.xml;
+package com.commons.xml;
 
 import java.util.ArrayList;
 import java.util.HashMap;

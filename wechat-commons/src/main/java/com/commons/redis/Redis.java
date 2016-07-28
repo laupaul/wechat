@@ -1,4 +1,4 @@
-package com.racing.redis;
+package com.commons.redis;
 
 import com.commons.redis.provider.RedisObjectProvider;
 

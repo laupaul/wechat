@@ -1,4 +1,4 @@
-package com.racing.commons.xml;
+package com.commons.xml;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
@@ -15,7 +15,7 @@ import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
-import com.racing.commons.base64.Base64;
+import com.commons.base64.Base64;
 import com.sun.xml.internal.ws.util.StringUtils;
 
 /**
@@ -29,10 +29,8 @@ public class XmlEngine {
 	private static XmlEngine engine;
 
 	public static XmlEngine instance() {
-		synchronized(engine){
-			if (engine == null)
-				return new XmlEngine();
-		}
+		if (engine == null)
+			return new XmlEngine();
 		return engine;
 	}
 
