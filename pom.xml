@@ -11,6 +11,7 @@
 		<module>wechat</module>
 		<module>wechat-commons</module>
 		<module>wechat-robot</module>
+		<module>wechat-hr</module>
 	</modules>
 
 	<properties>
