@@ -13,6 +13,7 @@
 		<module>wechat-robot</module>
 
 		<module>wechat-kingdee</module>
+		<module>wechat-web</module>
 	</modules>
 
 	<properties>
